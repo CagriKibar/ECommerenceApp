@@ -5,6 +5,8 @@ using DataAccess.Concrete.EntityFramework;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -12,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using TezProject.WebUI.Identity;
 
 namespace TezProject.WebUI
 {
@@ -27,8 +30,15 @@ namespace TezProject.WebUI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddDbContext<ApplicationIdentityDbContext>(options =>
+            options.UseSqlServer(Configuration.GetConnectionString(Configuration.GetConnectionString("IdentityConnection"))));
+            services.AddIdentity<ApplicationUser, IdentityRole>()
+                .AddEntityFrameworkStores<ApplicationIdentityDbContext>()
+                .AddDefaultTokenProviders();
             services.AddControllersWithViews();
             services.AddScoped<IProductDal, EfProductDal>();
+            services.AddScoped<ICategoryDal, EfCategoryDal>();
+            services.AddScoped<ICategoryService, CategoryManager>();
             services.AddScoped<IProductService, ProductManager>();
             services.AddMvc()
                 .SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Version_3_0);
@@ -50,16 +60,42 @@ namespace TezProject.WebUI
             }
             app.UseHttpsRedirection();
             app.UseStaticFiles();
+            app.UseAuthentication();
 
+            //app.UseMvc(routes =>
+            //{
+            //    routes.MapRoute(
+            //        name: "default",
+            //        template:"products/{category?}",
+            //        defaults: new {controller="Shop", action="List"}
+            //        );
+
+            //    routes.MapRoute(
+            //       name: "products",
+            //       template: "{controller=Home}/{action=Index}/{id?}"
+            //       );
+            //});
             app.UseRouting();
-
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapControllerRoute(name: "adminProducts",
+               pattern: "admin/products",
+               defaults: new { controller = "Admin", action = "ProductList" });
+
+                endpoints.MapControllerRoute(name: "adminProducts",
+               pattern: "admin/products/{*id}",
+               defaults: new { controller = "Admin", action = "EditProduct" });
+
+                endpoints.MapControllerRoute(name: "default",
+               pattern: "products/{*category}",
+               defaults: new { controller = "Shop", action = "List" });
+
                 endpoints.MapControllerRoute(
-                    name: "default",
+                    name: "products",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
+                endpoints.MapRazorPages();
             });
         }
     }

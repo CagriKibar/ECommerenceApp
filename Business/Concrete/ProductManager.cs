@@ -38,9 +38,19 @@ namespace Business.Concrete
             return _productDal.GetById(id);
         }
 
-        public List<Product> GetPopulerProducts()
+        public Product GetByIdWithCategory(int productId)
         {
-            return _productDal.GetAll(p => p.Price > 200).ToList();
+            return _productDal.GetByIdWithCategories(productId);
+        }
+
+        public int GetCountByCategory(string category)
+        {
+            return _productDal.GetCountByCategory(category);
+        }
+
+        public List<Product> GetProductByCategory(string category, int page, int pageSize)
+        {
+            return _productDal.GetProductsByCategory(category,page, pageSize);
         }
 
         public Product GetProductDetails(int id)
@@ -51,6 +61,11 @@ namespace Business.Concrete
         public void Update(Product entity)
         {
             _productDal.Update(entity);
+        }
+
+        public void Update(Product entity, int[] categoryIds)
+        {
+            _productDal.Update(entity, categoryIds);
         }
     }
 }

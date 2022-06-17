@@ -38,12 +38,21 @@ namespace TezProject.WebUI.Controllers
             }); 
             
         }
-        public IActionResult List()
+        public IActionResult List(string category, int page=1)
         {
+            const int pageSize = 3;
             return View(new ProductListModel
             {
-                Products = _productService.GetAll()
-            });
+                PageInfo = new PageInfo()
+                {
+                    TotalItems = _productService.GetCountByCategory(category),
+                    CurrentPage = page,
+                    ItemsPerPage= pageSize,
+                    CurrentCategory=category
+
+                },
+                Products = _productService.GetProductByCategory(category, page, pageSize)
+            }) ;
         }
     }
 }
